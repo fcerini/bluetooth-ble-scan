@@ -3,32 +3,29 @@ package com.example.myapplication
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.*
+import android.bluetooth.le.BluetoothLeAdvertiser
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
-import android.os.ParcelUuid
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.tView
 import kotlin.math.absoluteValue
-import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
     private lateinit var btAdapter: BluetoothAdapter
-    private lateinit var btLeAdvertiser: BluetoothLeAdvertiser
     private val requestBT = 986855
-    var btData = "000000000000009"
     private var btLeScanner = BluetoothAdapter.getDefaultAdapter().bluetoothLeScanner
     private var btScanning = false
     private val btHandlerStopScan = Handler()
-    private val BT_SCAN_PERIOD: Long = 30000
-    // IMEI, rssi (db)
+    private val scanPeriod: Long = 30000
     private var btNearbyMap = mutableMapOf<String, Int>()
     private val btScanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
@@ -60,24 +57,11 @@ class MainActivity : AppCompatActivity() {
 
             tView.setText ("")
             for (item in btNearbyMap) {
-                tView.setText ( tView.text.toString() +
-                        item.key + ": " +
-                        item.value.toString() +"db \n")
+                tView.setText ("${tView.text}${item.key}: ${item.value}db \n")
             }
 
         }
     }
-    private val btAdvertiseCallback : AdvertiseCallback = object: AdvertiseCallback(){
-        override fun onStartFailure(errorCode: Int) {
-            super.onStartFailure(errorCode)
-            tView.setText ( "Error: " + errorCode.toString() )
-        }
-        override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            super.onStartSuccess(settingsInEffect)
-            tView.setText ( tView.text.toString() +  "Advertising successfully started \n")
-        }
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,7 +70,6 @@ class MainActivity : AppCompatActivity() {
         btInit()
 
     }
-
 
     fun btStartScan(v:View){
         try {
@@ -97,11 +80,11 @@ class MainActivity : AppCompatActivity() {
                 btHandlerStopScan.postDelayed({
                     btScanning = false
                     btLeScanner.stopScan(btScanCallback)
-                    tView.setText ( tView.text.toString() +  "stopScan \n")
-                }, BT_SCAN_PERIOD)
+                    tView.setText ("${tView.text}stopScan \n")
+                }, scanPeriod)
                 btScanning = true
                 btLeScanner.startScan(btScanCallback)
-                tView.setText ( "startScan " + BT_SCAN_PERIOD.toString() + "sec. \n")
+                tView.setText ("startScan ${scanPeriod}sec. \n")
             } else {
                 btScanning = false
                 btLeScanner.stopScan(btScanCallback)
@@ -114,7 +97,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun btInit() :Boolean{
+    private fun btInit() :Boolean{
         try {
             if (!packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
                 tView.setText ("Bluetooth Low Energy not supported! sorry...")
@@ -147,7 +130,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             btLeScanner = BluetoothAdapter.getDefaultAdapter().bluetoothLeScanner
-            btLeAdvertiser = btAdapter.bluetoothLeAdvertiser
 
             return true
         } catch (e: Throwable) {
