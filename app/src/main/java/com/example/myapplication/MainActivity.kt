@@ -3,7 +3,6 @@ package com.example.myapplication
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.BluetoothLeAdvertiser
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
@@ -16,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.tView
-import kotlin.math.absoluteValue
+import org.altbeacon.beacon.BeaconParser
 
 
 class MainActivity : AppCompatActivity() {
@@ -34,20 +33,25 @@ class MainActivity : AppCompatActivity() {
                 return
             }
 
-            val record = result.scanRecord!!
-            val data = record.serviceData
-            if (data.size == 0){
-                return
-            }
-            var deviceImei = String(data.values.first())
-            var deviceRSSI = result.rssi.absoluteValue
+            val scanRecord = result.scanRecord!!
 
-            if (deviceImei.startsWith("im:")){
-                deviceImei = deviceImei.removePrefix("im:")
-            } else {
-                return
-            }
+            val beaconParser = BeaconParser()
 
+            beaconParser.setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24") // AltBeacon layout string
+            val beacon = beaconParser.fromScanData(
+                scanRecord.bytes,
+                result.rssi,
+                result.device )
+
+            if (beacon != null) {
+                // Access beacon data
+                val id1 = beacon.id1
+                val id2 = beacon.id2
+                val id3 = beacon.id3
+                val rssi = beacon.rssi
+                // ... (Extract other relevant data)
+            }
+            /*
             var oldRSSI = btNearbyMap.get(deviceImei)
             if (oldRSSI == null) {
                 oldRSSI = 999
@@ -59,7 +63,7 @@ class MainActivity : AppCompatActivity() {
             for (item in btNearbyMap) {
                 tView.setText ("${tView.text}${item.key}: ${item.value}db \n")
             }
-
+*/
         }
     }
 
@@ -143,4 +147,12 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
+}
+
+fun bytesToHex(`in`: ByteArray): String? {
+    val builder = StringBuilder()
+    for (b in `in`) {
+        builder.append(String.format("%02x ", b))
+    }
+    return builder.toString()
 }
