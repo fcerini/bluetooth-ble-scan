@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -43,27 +44,23 @@ class MainActivity : AppCompatActivity() {
                 result.rssi,
                 result.device )
 
-            if (beacon != null) {
-                // Access beacon data
-                val id1 = beacon.id1
-                val id2 = beacon.id2
-                val id3 = beacon.id3
-                val rssi = beacon.rssi
-                // ... (Extract other relevant data)
+            if (beacon == null) {
+                Log.d("SCAN", "No es un iBeacon: " + scanRecord.toString())
+                return
             }
-            /*
-            var oldRSSI = btNearbyMap.get(deviceImei)
-            if (oldRSSI == null) {
-                oldRSSI = 999
-            }
+            // Access beacon data
+            val id1 = beacon.id1
+            val id2 = beacon.id2
+            val id3 = beacon.id3
+            val id = "${id1} ${id2} ${id3}"
+            val rssi = beacon.rssi
 
-            btNearbyMap.put(deviceImei, deviceRSSI)
+            btNearbyMap.put(id, rssi)
 
             tView.setText ("")
             for (item in btNearbyMap) {
                 tView.setText ("${tView.text}${item.key}: ${item.value}db \n")
             }
-*/
         }
     }
 
